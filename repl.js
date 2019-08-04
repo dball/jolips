@@ -39,7 +39,17 @@ const tokenize = (s) => {
 };
 
 const consIter = (head, tail) => {
-    throw "TODO";
+    let seen_head = false;
+    return {
+	next: () => {
+	    if (!seen_head) {
+		seen_head = true;
+		return { done: false, value: head };
+	    } else {
+		return tail.next();
+	    }
+	}
+    };
 }
 
 const compileListForm = (tokens) => {
@@ -52,7 +62,8 @@ const compileListForm = (tokens) => {
 	const [name, value] = next.value;
 	switch (name) {
 	case "RPAREN": return list;
-	default: return compileForm(consIter(next.value, tokens));
+	default:
+	    list.push(compileForm(consIter(next.value, tokens)));
 	}
     }
 };
@@ -84,6 +95,7 @@ const compile = (s) => {
 }
 
 console.log(compile("  true"));
+console.log(compile("(+ 1 2)"));
 
 /*
 const readline = require('readline');
