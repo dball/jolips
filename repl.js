@@ -11,18 +11,14 @@ const token_types =
        ["NIL", "nil"],
        ["KEYWORD", ":" + symbol_re],
        ["SYMBOL", symbol_re],
-      ];
+      ].map(([name, re]) => ({ name: name, re: new RegExp("^" + re)}));
 
 const tokenize = (s) => {
-    // TODO why can't I shadow token_types?
-    const my_token_types = token_types.map(
-	([name, re]) =>	({ name: name, re: new RegExp("^" + re)}));
     let results = [];
     let offset = 0;
     while (offset < s.length) {
 	let matched = false;
-	for (const {name, re} of my_token_types) {
-	    re.lastIndex = offset;
+	for (const {name, re} of token_types) {
 	    const [match] = re.exec(s.substr(offset)) || [];
 	    if (match != null) {
 		results.push([name, match]);
