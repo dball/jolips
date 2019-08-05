@@ -7,6 +7,8 @@ test('compile', () => {
 });
 
 test('eval', () => {
-    expect(repl.eval(repl.buildContext(), '2')).toStrictEqual(2);
-    expect(repl.eval(repl.buildContext(new Map([["foo", 2]])), 'foo')).toStrictEqual(2);
+    const context = repl.buildContext(new Map([["foo", 2]]));
+    expect(repl.eval(context, '2')).toStrictEqual(2);
+    expect(repl.eval(context, 'foo')).toStrictEqual(2);
+    expect(repl.eval(context, '(def foo 3)')).toStrictEqual(null);
 });
