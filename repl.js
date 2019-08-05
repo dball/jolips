@@ -1,6 +1,6 @@
 'use strict';
 
-const symbol_re = "[^\p{Z}\p{C}\s\(\)]";
+const symbol_re = "[a-zA-Z\-_?!*+/][a-zA-Z\-_?!*+/0-9']*";
 
 const token_types =
       [["LPAREN", "\\("],
@@ -28,7 +28,7 @@ const tokenize = (s) => {
 	    }
 	}
 	if (!matched) {
-	    throw { msg: "Invalid syntax", offset: offset };
+	    throw { msg: "Invalid syntax", offset: offset, s: s };
 	}
     }
     return results;
@@ -75,8 +75,8 @@ const compileForm = (tokens) => {
 	case "INTEGER": return Number(value);
 	case "BOOLEAN": return value === "true";
 	case "NIL": return null;
-	case "KEYWORD": return { type: name, value: value };
-	case "SYMBOL": return { type: name, value: value };
+	case "KEYWORD": return { type: name, name: value };
+	case "SYMBOL": return { type: name, name: value };
 	case "WHITESPACE": continue;
 	case "LPAREN": return compileListForm(tokens);
 	}
@@ -88,12 +88,69 @@ const compile = (s) => {
     const tokens = tokenize(s);
     const iterator = tokens[Symbol.iterator]();
     return compileForm(iterator);
+};
+
+class Context {
+    constructor(parent) {
+	this.parent = parent;
+	this.bindings = new Map();
+    }
+
+    define(symbol, value) {
+	this.bindings.set(symbol.name, value);
+	return null;
+    }
+
+    defineAll(symbols, values) {
+	symbols.reduce((accum, symbol, i) => this.define(symbol, values[i]));
+    }
+
+    isDefined(symbol) {
+	return this.bindings.has(symbol.name);
+    }
+
+    resolve(symbol) {
+	if (this.isDefined(symbol)) {
+	    return this.bindings.get(symbol.name);
+	}
+	if (this.parent != null) {
+	    return this.parent.resolve(symbol);
+	}
+	throw { msg: "Undefined symbol", symbol: symbol, bindings: this.bindings };
+    }
 }
 
-console.log(compile("  true"));
-console.log(compile("(+ 1 2)"));
+const evalForm = (context, form) => {
+    if (Array.isArray(form)) {
+	const [symbol, ...args] = form;
+	// special forms
+	switch (symbol.name) {
+	case "def":
+	    const [def_symbol, value] = args;
+	    context.define(def_symbol, evalForm(context, value));
+	    return null;
+	case "fn":
+	    const [fn_args, body] = args;
+	    return {
+		apply: (call_context, call_args) => {
+		    // TODO consider adding 'context' as the final fallback
+		    const apply_context = new Context(call_context);
+		    apply_context.defineAll(fn_args, call_args);
+		    return evalForm(apply_context, body);
+		}
+	    };
+	default:
+	    throw { msg: "Unsupported form", form: form };
+	}
+    } else if (form.type == "SYMBOL") {
+	return context.resolve(form);
+    } else {
+	return form;
+    }
+};
 
-/*
+const evalString = (context, s) => evalForm(context, compile(s));
+
 const readline = require('readline');
 
 const rl = readline.createInterface({
@@ -101,8 +158,9 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+const repl_context = new Context();
+
 rl.question("j> ", (line) => {
-    console.log(line);
+    console.log(evalString(repl_context, line));
     rl.close();
 });
-*/
