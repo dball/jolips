@@ -151,6 +151,7 @@ const evalForm = (context, form) => {
 
 const evalString = (context, s) => evalForm(context, compile(s));
 
+/*
 const readline = require('readline');
 
 const rl = readline.createInterface({
@@ -164,3 +165,6 @@ rl.question("j> ", (line) => {
     console.log(evalString(repl_context, line));
     rl.close();
 });
+*/
+
+module.exports = { compile };
