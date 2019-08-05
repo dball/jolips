@@ -151,6 +151,8 @@ const evalForm = (context, form) => {
 
 const evalString = (context, s) => evalForm(context, compile(s));
 
+const buildContext = () => new Context();
+
 /*
 const readline = require('readline');
 
@@ -167,4 +169,4 @@ rl.question("j> ", (line) => {
 });
 */
 
-module.exports = { compile };
+module.exports = { compile, buildContext, eval: evalString };
