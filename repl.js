@@ -80,7 +80,7 @@ const compileForm = (tokens) => {
 	case "WHITESPACE": continue;
 	case "LPAREN": return compileListForm(tokens);
 	}
-	throw { msg: "Unexpected token", name: name, value: value };
+	throw { msg: "Unexpected token", name, value };
     }
 };
 
@@ -116,7 +116,7 @@ class Context {
 	if (this.parent != null) {
 	    return this.parent.resolve(symbol);
 	}
-	throw { msg: "Undefined symbol", symbol: symbol, bindings: this.bindings };
+	throw { msg: "Undefined symbol", symbol, bindings: this.bindings };
     }
 }
 
@@ -140,7 +140,7 @@ const evalForm = (context, form) => {
 		}
 	    };
 	default:
-	    throw { msg: "Unsupported form", form: form };
+	    throw { msg: "Unsupported form", form };
 	}
     } else if (form.type == "SYMBOL") {
 	return context.resolve(form);
