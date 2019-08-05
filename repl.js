@@ -151,7 +151,15 @@ const evalForm = (context, form) => {
 
 const evalString = (context, s) => evalForm(context, compile(s));
 
-const buildContext = () => new Context();
+const buildContext = (bindings) => {
+    const context = new Context();
+    if (bindings != null) {
+	for (const [name, value] of bindings) {
+	    context.define({name}, value);
+	}
+    }
+    return context;
+};
 
 /*
 const readline = require('readline');
