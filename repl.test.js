@@ -11,4 +11,5 @@ test('eval', () => {
     expect(repl.eval(context, '2')).toStrictEqual(2);
     expect(repl.eval(context, 'foo')).toStrictEqual(2);
     expect(repl.eval(context, '(def foo 3)')).toStrictEqual(null);
+    expect(repl.eval(context, 'foo')).toStrictEqual(3);
 });
