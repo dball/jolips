@@ -122,6 +122,8 @@ class Context {
 
 const buildFn = (f) => ({type: "FN", apply: f});
 
+const buildMacro = (f) => ({type: "MACRO", apply: f});
+
 const evalForm = (context, form) => {
     if (Array.isArray(form)) {
 	const [first, ...args] = form;
@@ -134,15 +136,12 @@ const evalForm = (context, form) => {
 		return null;
 	    case "fn":
 		const [fn_args, body] = args;
-		return {
-		    type: "FN",
-		    apply: (call_context, call_args) => {
-			// TODO consider adding 'context' as the final fallback
-			const apply_context = new Context(call_context);
-			apply_context.defineAll(fn_args, call_args);
-			return evalForm(apply_context, body);
-		    }
-		};
+		return buildFn((call_context, call_args) => {
+		    // TODO consider adding 'context' as the final fallback
+		    const apply_context = new Context(call_context);
+		    apply_context.defineAll(fn_args, call_args);
+		    return evalForm(apply_context, body);
+		});
 	    }
 	}
 	const value = evalForm(context, first);
