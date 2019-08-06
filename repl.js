@@ -122,25 +122,36 @@ class Context {
 
 const evalForm = (context, form) => {
     if (Array.isArray(form)) {
-	const [symbol, ...args] = form;
-	// special forms
-	switch (symbol.name) {
-	case "def":
-	    const [def_symbol, value] = args;
-	    context.define(def_symbol, evalForm(context, value));
-	    return null;
-	case "fn":
-	    const [fn_args, body] = args;
-	    return {
-		apply: (call_context, call_args) => {
-		    // TODO consider adding 'context' as the final fallback
-		    const apply_context = new Context(call_context);
-		    apply_context.defineAll(fn_args, call_args);
-		    return evalForm(apply_context, body);
-		}
-	    };
+	const [first, ...args] = form;
+	if (first.type == "SYMBOL") {
+	    // special forms
+	    switch (first.name) {
+	    case "def":
+		const [def_symbol, value] = args;
+		context.define(def_symbol, evalForm(context, value));
+		return null;
+	    case "fn":
+		const [fn_args, body] = args;
+		return {
+		    type: "FN",
+		    apply: (call_context, call_args) => {
+			// TODO consider adding 'context' as the final fallback
+			const apply_context = new Context(call_context);
+			apply_context.defineAll(fn_args, call_args);
+			return evalForm(apply_context, body);
+		    }
+		};
+	    }
+	}
+	const value = evalForm(context, first);
+	switch (value.type) {
+	case "FN":
+	    const fn_args = args.map((arg) => evalForm(context, arg));
+	    return value.apply(context, fn_args);
+	case "MACRO":
+	    throw { msg: "TODO", form };
 	default:
-	    throw { msg: "Unsupported form", form };
+	    throw { msg: "Invalid callable value", value, form };
 	}
     } else if (form.type == "SYMBOL") {
 	return context.resolve(form);
