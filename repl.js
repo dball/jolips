@@ -102,7 +102,7 @@ class Context {
     }
 
     defineAll(symbols, values) {
-	symbols.reduce((accum, symbol, i) => this.define(symbol, values[i]));
+	symbols.reduce((accum, symbol, i) => this.define(symbol, values[i]), null);
     }
 
     isDefined(symbol) {
@@ -119,6 +119,8 @@ class Context {
 	throw { msg: "Undefined symbol", symbol, bindings: this.bindings };
     }
 }
+
+const buildFn = (f) => ({type: "FN", apply: f});
 
 const evalForm = (context, form) => {
     if (Array.isArray(form)) {
@@ -171,8 +173,6 @@ const buildContext = (root, bindings) => {
     }
     return context;
 };
-
-const buildFn = (f) => ({type: "FN", apply: f});
 
 const standardBindings = new Map([
     ["+", buildFn((context, args) => args.reduce((accum, value) => accum + value, 0))],
