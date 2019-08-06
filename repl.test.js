@@ -8,8 +8,12 @@ test('compile', () => {
 
 test('eval', () => {
     const context = repl.buildContext(new Map([["foo", 2]]));
-    expect(repl.eval(context, '2')).toStrictEqual(2);
-    expect(repl.eval(context, 'foo')).toStrictEqual(2);
-    expect(repl.eval(context, '(def foo 3)')).toStrictEqual(null);
-    expect(repl.eval(context, 'foo')).toStrictEqual(3);
+    const forms =
+	  [['2', 2],
+	   ['foo', 2],
+	   ['(def foo 3)', null],
+	   ['foo', 3]];
+    for (const [form, expected] of forms) {
+	expect(repl.eval(context, form)).toStrictEqual(expected);
+    }
 });
