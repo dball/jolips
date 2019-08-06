@@ -122,7 +122,8 @@ class Context {
 
 const buildFn = (f) => ({type: "FN", apply: f});
 
-const buildMacro = (f) => ({type: "MACRO", apply: f});
+const buildMacro = (args, body) => ({
+    type: "MACRO", args, body});
 
 const evalForm = (context, form) => {
     if (Array.isArray(form)) {
@@ -130,11 +131,17 @@ const evalForm = (context, form) => {
 	if (first.type == "SYMBOL") {
 	    // special forms
 	    switch (first.name) {
-	    case "def":
+	    case "def": {
 		const [def_symbol, value] = args;
 		context.define(def_symbol, evalForm(context, value));
 		return null;
-	    case "fn":
+	    }
+	    case "defmacro": {
+		const [def_symbol, macro_args, body] = args;
+		context.define(def_symbol, buildMacro(macro_args, body));
+		return null;
+	    }
+	    case "fn": {
 		const [fn_args, body] = args;
 		return buildFn((call_context, call_args) => {
 		    // TODO consider adding 'context' as the final fallback
@@ -142,6 +149,7 @@ const evalForm = (context, form) => {
 		    apply_context.defineAll(fn_args, call_args);
 		    return evalForm(apply_context, body);
 		});
+	    }
 	    }
 	}
 	const value = evalForm(context, first);
