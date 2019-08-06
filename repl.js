@@ -162,14 +162,24 @@ const evalForm = (context, form) => {
 
 const evalString = (context, s) => evalForm(context, compile(s));
 
-const buildContext = (bindings) => {
-    const context = new Context();
+const buildContext = (root, bindings) => {
+    const context = root || new Context();
     if (bindings != null) {
 	for (const [name, value] of bindings) {
 	    context.define({name}, value);
 	}
     }
     return context;
+};
+
+const buildFn = (f) => ({type: "FN", apply: f});
+
+const standardBindings = new Map([
+    ["+", buildFn((context, args) => args.reduce((accum, value) => accum + value, 0))],
+]);
+
+const buildStandardContext = (bindings) => {
+    return buildContext(buildContext(null, standardBindings), bindings);
 };
 
 /*
@@ -188,4 +198,4 @@ rl.question("j> ", (line) => {
 });
 */
 
-module.exports = { compile, buildContext, eval: evalString };
+module.exports = { compile, buildStandardContext, eval: evalString };
