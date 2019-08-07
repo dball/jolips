@@ -18,6 +18,7 @@ test('eval', () => {
     ['(def inc (fn (x) (+ x 1)))', null],
     ['(inc 4)', 5],
     ['(if true 0 1)', 0],
+    ['(let (x 1 y (+ x 10)) y)', 11],
     ['(defmacro test-when (cond form) (if cond (let () body) nil))', null],
     //['(test-when true 23)', 23],
   ];

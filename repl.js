@@ -133,6 +133,20 @@ const truthy = (value) => {
   }
 };
 
+const partition = (seq, size) => {
+  if (seq.length % size != 0) {
+    throw {msg: "invalid partition", seq, size};
+  }
+  return seq.reduce((accum, x, i) => {
+    if (i % size == 0) {
+      accum.push([x]);
+    } else {
+      accum[accum.length - 1].push(x);
+    }
+    return accum;
+  }, []);
+};
+
 const evalForm = (context, form) => {
   if (Array.isArray(form)) {
     const [first, ...args] = form;
@@ -162,6 +176,14 @@ const evalForm = (context, form) => {
         const [cond, positive, negative] = args;
         const chosen_form = truthy(evalForm(context, cond)) ? positive : negative;
         return evalForm(context, chosen_form);
+      }
+      case "let": {
+        const [let_bindings, body] = args;
+        const let_context = new Context(context);
+        for (const [binding_symbol, binding_form] of partition(let_bindings, 2)) {
+          let_context.define(binding_symbol, evalForm(let_context, binding_form));
+        }
+        return evalForm(let_context, body);
       }
       }
     }
