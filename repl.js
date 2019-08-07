@@ -72,13 +72,13 @@ const compileForm = (tokens) => {
     }
     const [name, value] = next.value;
     switch (name) {
-    case "INTEGER": return Number(value);
-    case "BOOLEAN": return value === "true";
-    case "NIL": return null;
-    case "KEYWORD": return { type: name, name: value };
-    case "SYMBOL": return { type: name, name: value };
-    case "WHITESPACE": continue;
-    case "LPAREN": return compileListForm(tokens);
+      case "INTEGER": return Number(value);
+      case "BOOLEAN": return value === "true";
+      case "NIL": return null;
+      case "KEYWORD": return { type: name, name: value };
+      case "SYMBOL": return { type: name, name: value };
+      case "WHITESPACE": continue;
+      case "LPAREN": return compileListForm(tokens);
     }
     throw { msg: "Unexpected token", name, value };
   }
@@ -127,9 +127,9 @@ const buildMacro = (args, body) => ({
 
 const truthy = (value) => {
   switch (value) {
-  case false: return false;
-  case null: return false;
-  default: return true;
+    case false: return false;
+    case null: return false;
+    default: return true;
   }
 };
 
@@ -153,49 +153,49 @@ const evalForm = (context, form) => {
     if (first.type == "SYMBOL") {
       // special forms
       switch (first.name) {
-      case "def": {
-        const [def_symbol, value] = args;
-        context.define(def_symbol, evalForm(context, value));
-        return null;
-      }
-      case "defmacro": {
-        const [def_symbol, macro_args, body] = args;
-        context.define(def_symbol, buildMacro(macro_args, body));
-        return null;
-      }
-      case "fn": {
-        const [fn_args, body] = args;
-        return buildFn((call_context, call_args) => {
-          // TODO consider adding 'context' as the final fallback
-          const apply_context = new Context(call_context);
-          apply_context.defineAll(fn_args, call_args);
-          return evalForm(apply_context, body);
-        });
-      }
-      case "if": {
-        const [cond, positive, negative] = args;
-        const chosen_form = truthy(evalForm(context, cond)) ? positive : negative;
-        return evalForm(context, chosen_form);
-      }
-      case "let": {
-        const [let_bindings, body] = args;
-        const let_context = new Context(context);
-        for (const [binding_symbol, binding_form] of partition(let_bindings, 2)) {
-          let_context.define(binding_symbol, evalForm(let_context, binding_form));
+        case "def": {
+          const [def_symbol, value] = args;
+          context.define(def_symbol, evalForm(context, value));
+          return null;
         }
-        return evalForm(let_context, body);
-      }
+        case "defmacro": {
+          const [def_symbol, macro_args, body] = args;
+          context.define(def_symbol, buildMacro(macro_args, body));
+          return null;
+        }
+        case "fn": {
+          const [fn_args, body] = args;
+          return buildFn((call_context, call_args) => {
+            // TODO consider adding 'context' as the final fallback
+            const apply_context = new Context(call_context);
+            apply_context.defineAll(fn_args, call_args);
+            return evalForm(apply_context, body);
+          });
+        }
+        case "if": {
+          const [cond, positive, negative] = args;
+          const chosen_form = truthy(evalForm(context, cond)) ? positive : negative;
+          return evalForm(context, chosen_form);
+        }
+        case "let": {
+          const [let_bindings, body] = args;
+          const let_context = new Context(context);
+          for (const [binding_symbol, binding_form] of partition(let_bindings, 2)) {
+            let_context.define(binding_symbol, evalForm(let_context, binding_form));
+          }
+          return evalForm(let_context, body);
+        }
       }
     }
     const value = evalForm(context, first);
     switch (value.type) {
-    case "FN":
-      const fn_args = args.map((arg) => evalForm(context, arg));
-      return value.apply(context, fn_args);
-    case "MACRO":
-      throw { msg: "TODO", form };
-    default:
-      throw { msg: "Invalid callable value", value, form };
+      case "FN":
+        const fn_args = args.map((arg) => evalForm(context, arg));
+        return value.apply(context, fn_args);
+      case "MACRO":
+        throw { msg: "TODO", form };
+      default:
+        throw { msg: "Invalid callable value", value, form };
     }
   } else if (form.type == "SYMBOL") {
     return context.resolve(form);
