@@ -125,6 +125,14 @@ const buildFn = (f) => ({type: "FN", apply: f});
 const buildMacro = (args, body) => ({
     type: "MACRO", args, body});
 
+const truthy = (value) => {
+    switch (value) {
+    case false: return false;
+    case null: return false;
+    default: return true;
+    }
+};
+
 const evalForm = (context, form) => {
     if (Array.isArray(form)) {
 	const [first, ...args] = form;
