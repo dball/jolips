@@ -158,6 +158,11 @@ const evalForm = (context, form) => {
           return evalForm(apply_context, body);
         });
       }
+      case "if": {
+        const [cond, positive, negative] = args;
+        const chosen_form = truthy(evalForm(context, cond)) ? positive : negative;
+        return evalForm(context, chosen_form);
+      }
       }
     }
     const value = evalForm(context, first);
