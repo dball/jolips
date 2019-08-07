@@ -17,7 +17,9 @@ test('eval', () => {
     ['(+ 1 (+ 1 1))', 3],
     ['(def inc (fn (x) (+ x 1)))', null],
     ['(inc 4)', 5],
-    ['(if true 0 1)', 0]
+    ['(if true 0 1)', 0],
+    ['(defmacro test-when (cond form) (if cond (let () body) nil))', null],
+    //['(test-when true 23)', 23],
   ];
   for (const [form, expected] of forms) {
     expect(repl.eval(context, form)).toStrictEqual(expected);
