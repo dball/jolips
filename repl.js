@@ -202,7 +202,11 @@ const evalForm = (context, form) => {
         const fn_args = args.map((arg) => evalForm(context, arg));
         return value.apply(context, fn_args);
       case "MACRO":
-        throw { msg: "TODO", form };
+        const macro_args = value.args;
+        const macro_body = value.body;
+        const eval_context = new Context(context);
+        eval_context.defineAll(macro_args, args);
+        return evalForm(eval_context, macro_body);
       default:
         throw { msg: "Invalid callable value", value, form };
     }

@@ -25,7 +25,9 @@ test('eval', () => {
     ['(eval (quote 2))', 2],
     ['(eval (quote foo))', 3],
     ['(defmacro test-when (cond body) (if (eval cond) (let () (eval body)) nil))', null],
-    //['(test-when true 23)', 23],
+    ['(test-when true 23)', 23],
+    ['(def huh? true)', null],
+    ['(test-when huh? foo)', 3],
   ];
   for (const [form, expected] of forms) {
     expect(repl.eval(context, form)).toStrictEqual(expected);
