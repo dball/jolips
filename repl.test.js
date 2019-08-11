@@ -20,6 +20,8 @@ test('eval', () => {
     ['(if true 0 1)', 0],
     ['(let (x 1 y (+ x 10)) y)', 11],
     ['(let () 2 3)', 3],
+    ['(quote 2)', 2],
+    ['(quote foo)', {type: "SYMBOL", name: "foo"}],
     ['(defmacro test-when (cond body) (if (eval cond) (let () (eval body)) nil))', null],
     // TODO implement eval?
     //['(test-when true 23)', 23],

@@ -147,6 +147,7 @@ const partition = (seq, size) => {
   }, []);
 };
 
+// TODO implement as loop as optimization
 const evalForm = (context, form) => {
   if (Array.isArray(form)) {
     const [first, ...args] = form;
@@ -184,6 +185,10 @@ const evalForm = (context, form) => {
             let_context.define(binding_symbol, evalForm(let_context, binding_form));
           }
           return body.reduce((accum, body_form) => evalForm(let_context, body_form), null);
+        }
+        case "quote": {
+          const [quoted_form] = args;
+          return quoted_form;
         }
       }
     }
