@@ -190,6 +190,10 @@ const evalForm = (context, form) => {
           const [quoted_form] = args;
           return quoted_form;
         }
+        case "eval": {
+          const [eval_form] = args;
+          return evalForm(context, evalForm(context, eval_form));
+        }
       }
     }
     const value = evalForm(context, first);
