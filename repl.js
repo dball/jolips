@@ -178,12 +178,12 @@ const evalForm = (context, form) => {
           return evalForm(context, chosen_form);
         }
         case "let": {
-          const [let_bindings, body] = args;
+          const [let_bindings, ...body] = args;
           const let_context = new Context(context);
           for (const [binding_symbol, binding_form] of partition(let_bindings, 2)) {
             let_context.define(binding_symbol, evalForm(let_context, binding_form));
           }
-          return evalForm(let_context, body);
+          return body.reduce((accum, body_form) => evalForm(let_context, body_form), null);
         }
       }
     }
