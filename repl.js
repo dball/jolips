@@ -243,21 +243,6 @@ const evalForm = (context, form) => {
           const [eval_form] = args;
           return evalForm(context, evalForm(context, eval_form));
         }
-        case ">=": {
-          return compare(first.name, args);
-        }
-        case ">": {
-          return compare(first.name, args);
-        }
-        case "=": {
-          return compare(first.name, args);
-        }
-        case "<": {
-          return compare(first.name, args);
-        }
-        case "<=": {
-          return compare(first.name, args);
-        }
       }
     }
     const value = evalForm(context, first);
@@ -295,6 +280,11 @@ const buildContext = (root, bindings) => {
 
 const standardBindings = new Map([
   ["+", buildFn((context, args) => args.reduce((accum, value) => accum + value, 0))],
+  [">=", buildFn((context, args) => compare(">=", args))],
+  [">", buildFn((context, args) => compare(">", args))],
+  ["=", buildFn((context, args) => compare("=", args))],
+  ["<", buildFn((context, args) => compare("<", args))],
+  ["<=", buildFn((context, args) => compare("<=", args))],
 ]);
 
 const buildStandardContext = (bindings) => {
