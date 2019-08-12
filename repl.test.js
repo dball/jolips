@@ -28,8 +28,15 @@ test('eval', () => {
     ['(test-when true 23)', 23],
     ['(def huh? true)', null],
     ['(test-when huh? foo)', 3],
+    ['(> 5 0 -5)', true],
+    ['(> 5 0 10)', false],
+    ['(= 0)', true],
   ];
   for (const [form, expected] of forms) {
     expect(repl.eval(context, form)).toStrictEqual(expected);
   }
+});
+
+test('eval limits', () => {
+  const context = repl.buildStandardContext(new Map());
 });

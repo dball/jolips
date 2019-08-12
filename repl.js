@@ -1,6 +1,6 @@
 'use strict';
 
-const symbol_re = "[a-zA-Z\-_?!*+/][a-zA-Z\-_?!*+/0-9']*";
+const symbol_re = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
 const token_types = [
   ["LPAREN", "\\("],
@@ -147,6 +147,55 @@ const partition = (seq, size) => {
   }, []);
 };
 
+const compare = (op, seq) => {
+  if (seq.length == 0) {
+    throw {msg: "empty compare seq", op, seq};
+  }
+  {
+    const last_type = seq[0];
+    for (const i=1; i<seq.last; i++) {
+      if (last_type !== typeof value) {
+        throw {msg: "invalid compare seq", op, seq};
+      }
+    }
+  }
+  let comp_pred = null;
+  switch (op) {
+    case ">=":
+      comp_pred = (x, y) => x >= y;
+      break;
+    case ">": {
+      comp_pred = (x, y) => x > y;
+      break;
+    }
+    case "=": {
+      comp_pred = (x, y) => x == y;
+      break;
+    }
+    case "<": {
+      comp_pred = (x, y) => x < y;
+      break;
+    }
+    case "<=": {
+      comp_pred = (x, y) => x <= y;
+      break;
+    }
+    default: {
+      throw {msg: "Invalid compare op", op, seq};
+    }
+  }
+  let marker = seq[0];
+  for (let i=1; i<seq.length; i++) {
+    const value = seq[i];
+    if (comp_pred(marker, value)) {
+      marker = value;
+    } else {
+      return false;
+    }
+  }
+  return true;
+};
+
 // TODO implement as loop as optimization
 const evalForm = (context, form) => {
   if (Array.isArray(form)) {
@@ -193,6 +242,21 @@ const evalForm = (context, form) => {
         case "eval": {
           const [eval_form] = args;
           return evalForm(context, evalForm(context, eval_form));
+        }
+        case ">=": {
+          return compare(first.name, args);
+        }
+        case ">": {
+          return compare(first.name, args);
+        }
+        case "=": {
+          return compare(first.name, args);
+        }
+        case "<": {
+          return compare(first.name, args);
+        }
+        case "<=": {
+          return compare(first.name, args);
         }
       }
     }
