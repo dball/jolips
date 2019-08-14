@@ -31,6 +31,7 @@ test('eval', () => {
     ['(> 5 0 -5)', true],
     ['(> 5 0 10)', false],
     ['(= 0)', true],
+    ['(((fn (x) (fn (y) (+ x y))) 2) 3)', 5],
   ];
   for (const [form, expected] of forms) {
     expect(repl.eval(context, form)).toStrictEqual(expected);

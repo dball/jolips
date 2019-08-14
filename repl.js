@@ -216,7 +216,19 @@ const evalForm = (context, form) => {
         case "fn": {
           const [fn_args, body] = args;
           return buildFn((call_context, call_args) => {
+            console.log("building fn", { context, call_context, fn_args, call_args });
             // TODO consider adding 'context' as the final fallback
+            //
+            // context has the bindings around the fn form, e.g. from fn closures
+            // (fn (x) (fn (y) (+ x y)))
+            // call_context has the bindings around the call site
+            // (let (x 2) (def f (fn (x) (fn (y) (+ x y)))) ((f 3) 4)) => 7
+            // (def x 2) (def f (fn (x) (fn (y) (+ x y)))) ((f 3) 4)) => 7
+            // within the fn body being applied, symbols should be resolved:
+            // from the args, then the form closure, then the call closure
+            //
+            // TODO either change context.parent to a seq, or clone call_context and
+            // add context as the new root. Are they functionally different?
             const apply_context = new Context(call_context);
             apply_context.defineAll(fn_args, call_args);
             return evalForm(apply_context, body);
