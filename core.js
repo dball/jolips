@@ -90,6 +90,8 @@ const compile = (s) => {
   return compileForm(iterator);
 };
 
+// TODO consider using idiomatic javascript [] to get and set bindings
+// also, consider operating on symbol names instead of objects
 class Context {
   constructor(...parents) {
     this.parents = parents;
