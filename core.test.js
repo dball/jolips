@@ -1,13 +1,13 @@
 'use strict';
 
-const repl = require('./repl');
+const core = require('./core');
 
 test('compile', () => {
-  expect(repl.compile('(+ 1 2)')).toStrictEqual([{type: "SYMBOL", name: "+"}, 1, 2]);
+  expect(core.compile('(+ 1 2)')).toStrictEqual([{type: "SYMBOL", name: "+"}, 1, 2]);
 });
 
 test('eval', () => {
-  const context = repl.buildStandardContext(new Map([["foo", 2]]));
+  const context = core.buildStandardContext(new Map([["foo", 2]]));
   const forms = [
     ['2', 2],
     ['foo', 2],
@@ -35,10 +35,10 @@ test('eval', () => {
     ['(let (x 1000) (((fn (x) (fn (y) (+ x y))) 2) 3))', 5],
   ];
   for (const [form, expected] of forms) {
-    expect(repl.eval(context, form)).toStrictEqual(expected);
+    expect(core.eval(context, form)).toStrictEqual(expected);
   }
 });
 
 test('eval limits', () => {
-  const context = repl.buildStandardContext(new Map());
+  const context = core.buildStandardContext(new Map());
 });
