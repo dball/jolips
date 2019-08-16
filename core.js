@@ -106,7 +106,8 @@ class Context {
   defineAll(symbols, values) {
     symbols.reduce((accum, symbol, i) => this.define(symbol, values[i]), null);
   }
-  
+
+  // TODO observe this only checks for local definition. Is that desired?
   isDefined(symbol) {
     return this.bindings.has(symbol.name);
   }
