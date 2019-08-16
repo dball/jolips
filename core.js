@@ -291,20 +291,4 @@ const buildStandardContext = (bindings) => {
   return buildContext(buildContext(null, standardBindings), bindings);
 };
 
-/*
-const readline = require('readline');
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-const repl_context = new Context();
-
-rl.question("j> ", (line) => {
-    console.log(evalString(repl_context, line));
-    rl.close();
-});
-*/
-
 module.exports = { compile, buildStandardContext, eval: evalString };
