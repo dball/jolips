@@ -279,7 +279,9 @@ const buildContext = (root, bindings) => {
 };
 
 const standardBindings = new Map([
+  // TODO consider asserting all args are of number type, or at least the same type
   ["+", buildFn((context, args) => args.reduce((accum, value) => accum + value, 0))],
+  ["*", buildFn((context, args) => args.reduce((accum, value) => accum * value, 1))],
   [">=", buildFn((context, args) => compare(">=", args))],
   [">", buildFn((context, args) => compare(">", args))],
   ["=", buildFn((context, args) => compare("=", args))],
