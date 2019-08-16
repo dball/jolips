@@ -90,41 +90,34 @@ const compile = (s) => {
   return compileForm(iterator);
 };
 
-// TODO consider using idiomatic javascript [] to get and set bindings
-// also, consider operating on symbol names instead of objects
 class Context {
   constructor(...parents) {
     this.parents = parents;
     this.bindings = new Map();
   }
   
-  define(symbol, value) {
-    this.bindings.set(symbol.name, value);
+  define(key, value) {
+    this.bindings.set(key, value);
     return null;
   }
   
-  defineAll(symbols, values) {
-    symbols.reduce((accum, symbol, i) => this.define(symbol, values[i]), null);
+  defineAll(keys, values) {
+    keys.reduce((accum, key, i) => this.define(key, values[i]), null);
   }
 
-  // TODO observe this only checks for local definition. Is that desired?
-  isDefined(symbol) {
-    return this.bindings.has(symbol.name);
-  }
-  
-  resolve(symbol) {
-    if (this.isDefined(symbol)) {
-      return this.bindings.get(symbol.name);
+  resolve(key) {
+    if (this.bindings.has(key)) {
+      return this.bindings.get(key);
     }
     if (this.parents != null) {
       for (const parent of this.parents) {
-        const value = parent.resolve(symbol);
+        const value = parent.resolve(key);
         if (value != null) {
           return value;
         }
       }
     }
-    throw { msg: "Undefined symbol", symbol, bindings: this.bindings };
+    throw { msg: "Undefined binding", key, context: this };
   }
 }
 
@@ -213,19 +206,19 @@ const evalForm = (context, form) => {
       switch (first.name) {
         case "def": {
           const [def_symbol, value] = args;
-          context.define(def_symbol, evalForm(context, value));
+          context.define(def_symbol.name, evalForm(context, value));
           return null;
         }
         case "defmacro": {
           const [def_symbol, macro_args, body] = args;
-          context.define(def_symbol, buildMacro(macro_args, body));
+          context.define(def_symbol.name, buildMacro(macro_args, body));
           return null;
         }
         case "fn": {
           const [fn_args, body] = args;
           return buildFn((call_context, call_args) => {
             const apply_context = new Context(context, call_context);
-            apply_context.defineAll(fn_args, call_args);
+            apply_context.defineAll(fn_args.map((sym) => sym.name), call_args);
             return evalForm(apply_context, body);
           });
         }
@@ -238,7 +231,7 @@ const evalForm = (context, form) => {
           const [let_bindings, ...body] = args;
           const let_context = new Context(context);
           for (const [binding_symbol, binding_form] of partition(let_bindings, 2)) {
-            let_context.define(binding_symbol, evalForm(let_context, binding_form));
+            let_context.define(binding_symbol.name, evalForm(let_context, binding_form));
           }
           return body.reduce((accum, body_form) => evalForm(let_context, body_form), null);
         }
@@ -261,13 +254,13 @@ const evalForm = (context, form) => {
         const macro_args = value.args;
         const macro_body = value.body;
         const eval_context = new Context(context);
-        eval_context.defineAll(macro_args, args);
+        eval_context.defineAll(macro_args.map((sym) => sym.name), args);
         return evalForm(eval_context, macro_body);
       default:
         throw { msg: "Invalid callable value", value, form };
     }
   } else if (form.type == "SYMBOL") {
-    return context.resolve(form);
+    return context.resolve(form.name);
   } else {
     return form;
   }
@@ -279,7 +272,7 @@ const buildContext = (root, bindings) => {
   const context = root || new Context();
   if (bindings != null) {
     for (const [name, value] of bindings) {
-      context.define({name}, value);
+      context.define(name, value);
     }
   }
   return context;
