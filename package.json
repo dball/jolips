@@ -3,6 +3,9 @@
         "immutable": "^4.0.0-rc.12"
     },
     "devDependencies": {
+        "eslint": "^6.3.0",
+        "eslint-config-airbnb-base": "^14.0.0",
+        "eslint-plugin-import": "^2.18.2",
         "jest": "^24.8.0"
     },
     "scripts": {
