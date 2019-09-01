@@ -1,8 +1,11 @@
 {
+    "dependencies": {
+        "immutable": "^4.0.0-rc.12"
+    },
     "devDependencies": {
-	"jest": "^24.8.0"
+        "jest": "^24.8.0"
     },
     "scripts": {
-	"test": "jest"
+        "test": "jest"
     }
 }
