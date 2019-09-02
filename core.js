@@ -76,23 +76,39 @@ const parseListForm = (tokens) => {
 };
 
 const parseForm = (tokens) => {
-  while (true) {
+  let form;
+  do {
     const next = tokens.next();
     if (next.done) {
-      throw { msg: 'No tokens to compile for form' };
+      throw new Ex('No tokens to compile for form');
     }
     const [name, value] = next.value;
     switch (name) {
-      case 'INTEGER': return Number(value);
-      case 'BOOLEAN': return value === 'true';
-      case 'NIL': return null;
-      case 'KEYWORD': return { type: name, name: value };
-      case 'SYMBOL': return { type: name, name: value };
-      case 'WHITESPACE': continue;
-      case 'LPAREN': return parseListForm(tokens);
+      case 'INTEGER':
+        form = Number(value);
+        break;
+      case 'BOOLEAN':
+        form = value === 'true';
+        break;
+      case 'NIL':
+        form = null;
+        break;
+      case 'KEYWORD':
+        form = { type: name, name: value };
+        break;
+      case 'SYMBOL':
+        form = { type: name, name: value };
+        break;
+      case 'WHITESPACE':
+        break;
+      case 'LPAREN':
+        form = parseListForm(tokens);
+        break;
+      default:
+        throw new Ex('Invalid token type', { name, value });
     }
-    throw { msg: 'Unexpected token', name, value };
-  }
+  } while (form === undefined);
+  return form;
 };
 
 const compile = (s) => {
