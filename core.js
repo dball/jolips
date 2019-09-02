@@ -261,6 +261,7 @@ const evalForm = (context, form) => {
         case 'let': {
           const [letBindings, ...body] = args;
           const letContext = new Context(context);
+          // eslint-disable-next-line no-restricted-syntax
           for (const [bindingSymbol, bindingForm] of partition(letBindings, 2)) {
             letContext.define(bindingSymbol.name, evalForm(letContext, bindingForm));
           }
@@ -271,8 +272,8 @@ const evalForm = (context, form) => {
           return quotedForm;
         }
         case 'eval': {
-          const [evalForm] = args;
-          return evalForm(context, evalForm(context, evalForm));
+          const [evalingForm] = args;
+          return evalForm(context, evalForm(context, evalingForm));
         }
         default: break;
       }
@@ -305,6 +306,7 @@ const evalString = (context, s) => evalForm(context, parse(s));
 const buildContext = (root, bindings) => {
   const context = root || new Context();
   if (bindings != null) {
+    // eslint-disable-next-line no-restricted-syntax
     for (const [name, value] of bindings) {
       context.define(name, value);
     }
