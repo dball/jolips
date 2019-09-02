@@ -265,7 +265,7 @@ const evalForm = (context, form) => {
           for (const [bindingSymbol, bindingForm] of partition(letBindings, 2)) {
             letContext.define(bindingSymbol.name, evalForm(letContext, bindingForm));
           }
-          return body.reduce((accum, body_form) => evalForm(letContext, body_form), null);
+          return body.reduce((accum, bodyForm) => evalForm(letContext, bodyForm), null);
         }
         case 'quote': {
           const [quotedForm] = args;
