@@ -56,19 +56,23 @@ const consIter = (head, tail) => {
 
 const parseListForm = (tokens) => {
   const list = [];
-  while (true) {
+  let terminated = false;
+  do {
     const next = tokens.next();
     if (next.done) {
       throw new Ex('Invalid list form: did not terminate');
     }
     const [name] = next.value;
     switch (name) {
-      case 'RPAREN': return list;
+      case 'RPAREN':
+        terminated = true;
+        break;
       default:
         // eslint-disable-next-line no-use-before-define
         list.push(parseForm(consIter(next.value, tokens)));
     }
-  }
+  } while (!terminated);
+  return list;
 };
 
 const parseForm = (tokens) => {
