@@ -14,17 +14,18 @@ const tokenTypes = [
 const tokenize = (s) => {
   const results = [];
   let offset = 0;
-  while (offset < s.length) {
-    let matched = false;
-    for (const {name, re} of tokenTypes) {
-      const [match] = re.exec(s.substr(offset)) || [];
-      if (match != null) {
-        results.push([name, match]);
-        offset = offset + match.length;
-        matched = true;
-        break;
-      }
+  const consume = (tokenType) => {
+    const { name, re } = tokenType;
+    const [match] = re.exec(s.substr(offset)) || [];
+    if (match != null) {
+      results.push([name, match]);
+      offset += match.length;
+      return true;
     }
+    return false;
+  };
+  while (offset < s.length) {
+    const matched = tokenTypes.some(consume);
     if (!matched) {
       throw { msg: 'Invalid syntax', offset, s };
     }
