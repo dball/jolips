@@ -152,7 +152,7 @@ class Context {
 const buildFn = (f) => ({ type: 'FN', apply: f });
 
 const buildMacro = (args, body) => ({
-  type: 'MACRO', args, body
+  type: 'MACRO', args, body,
 });
 
 const truthy = (value) => {
@@ -164,11 +164,11 @@ const truthy = (value) => {
 };
 
 const partition = (seq, size) => {
-  if (seq.length % size != 0) {
-    throw { msg: 'invalid partition', seq, size };
+  if (seq.length % size !== 0) {
+    throw new Ex('invalid partition', { seq, size });
   }
   return seq.reduce((accum, x, i) => {
-    if (i % size == 0) {
+    if (i % size === 0) {
       accum.push([x]);
     } else {
       accum[accum.length - 1].push(x);
@@ -178,46 +178,48 @@ const partition = (seq, size) => {
 };
 
 const compare = (op, seq) => {
-  if (seq.length == 0) {
-    throw { msg: 'empty compare seq', op, seq };
+  if (seq.length === 0) {
+    throw new Ex('empty compare seq', { op, seq });
   }
   {
-    const last_type = seq[0];
-    for (const i = 1; i < seq.last; i++) {
-      if (last_type !== typeof value) {
-        throw { msg: 'invalid compare seq', op, seq };
+    const firstType = seq[0];
+    for (let i = 1; i < seq.last; i += 1) {
+      // eslint-disable-next-line valid-typeof
+      if (firstType !== typeof value) {
+        throw new Ex('invalid compare seq', { op, seq });
       }
     }
   }
-  let comp_pred = null;
+  let compPred = null;
   switch (op) {
     case '>=':
-      comp_pred = (x, y) => x >= y;
+      compPred = (x, y) => x >= y;
       break;
     case '>': {
-      comp_pred = (x, y) => x > y;
+      compPred = (x, y) => x > y;
       break;
     }
     case '=': {
-      comp_pred = (x, y) => x == y;
+      // eslint-disable-next-line eqeqeq
+      compPred = (x, y) => x == y;
       break;
     }
     case '<': {
-      comp_pred = (x, y) => x < y;
+      compPred = (x, y) => x < y;
       break;
     }
     case '<=': {
-      comp_pred = (x, y) => x <= y;
+      compPred = (x, y) => x <= y;
       break;
     }
     default: {
-      throw { msg: 'Invalid compare op', op, seq };
+      throw new Ex('Invalid compare op', { op, seq });
     }
   }
   let marker = seq[0];
-  for (let i = 1; i < seq.length; i++) {
+  for (let i = 1; i < seq.length; i += 1) {
     const value = seq[i];
-    if (comp_pred(marker, value)) {
+    if (compPred(marker, value)) {
       marker = value;
     } else {
       return false;
@@ -230,65 +232,68 @@ const compare = (op, seq) => {
 const evalForm = (context, form) => {
   if (Array.isArray(form)) {
     const [first, ...args] = form;
-    if (first.type == 'SYMBOL') {
+    if (first.type === 'SYMBOL') {
       // special forms
       switch (first.name) {
         case 'def': {
-          const [def_symbol, value] = args;
-          context.define(def_symbol.name, evalForm(context, value));
+          const [defSymbol, value] = args;
+          context.define(defSymbol.name, evalForm(context, value));
           return null;
         }
         case 'defmacro': {
-          const [def_symbol, macro_args, body] = args;
-          context.define(def_symbol.name, buildMacro(macro_args, body));
+          const [defSymbol, macroArgs, body] = args;
+          context.define(defSymbol.name, buildMacro(macroArgs, body));
           return null;
         }
         case 'fn': {
-          const [fn_args, body] = args;
-          return buildFn((call_context, call_args) => {
-            const apply_context = new Context(context, call_context);
-            apply_context.defineAll(fn_args.map((sym) => sym.name), call_args);
-            return evalForm(apply_context, body);
+          const [fnArgs, body] = args;
+          return buildFn((callContext, callArgs) => {
+            const applyContext = new Context(context, callContext);
+            applyContext.defineAll(fnArgs.map((sym) => sym.name), callArgs);
+            return evalForm(applyContext, body);
           });
         }
         case 'if': {
           const [cond, positive, negative] = args;
-          const chosen_form = truthy(evalForm(context, cond)) ? positive : negative;
-          return evalForm(context, chosen_form);
+          const chosenForm = truthy(evalForm(context, cond)) ? positive : negative;
+          return evalForm(context, chosenForm);
         }
         case 'let': {
-          const [let_bindings, ...body] = args;
-          const let_context = new Context(context);
-          for (const [binding_symbol, binding_form] of partition(let_bindings, 2)) {
-            let_context.define(binding_symbol.name, evalForm(let_context, binding_form));
+          const [letBindings, ...body] = args;
+          const letContext = new Context(context);
+          for (const [bindingSymbol, bindingForm] of partition(letBindings, 2)) {
+            letContext.define(bindingSymbol.name, evalForm(letContext, bindingForm));
           }
-          return body.reduce((accum, body_form) => evalForm(let_context, body_form), null);
+          return body.reduce((accum, body_form) => evalForm(letContext, body_form), null);
         }
         case 'quote': {
-          const [quoted_form] = args;
-          return quoted_form;
+          const [quotedForm] = args;
+          return quotedForm;
         }
         case 'eval': {
-          const [eval_form] = args;
-          return evalForm(context, evalForm(context, eval_form));
+          const [evalForm] = args;
+          return evalForm(context, evalForm(context, evalForm));
         }
+        default: break;
       }
     }
     const value = evalForm(context, first);
     switch (value.type) {
-      case 'FN':
-        const fn_args = args.map((arg) => evalForm(context, arg));
-        return value.apply(context, fn_args);
-      case 'MACRO':
-        const macro_args = value.args;
-        const macro_body = value.body;
-        const eval_context = new Context(context);
-        eval_context.defineAll(macro_args.map((sym) => sym.name), args);
-        return evalForm(eval_context, macro_body);
+      case 'FN': {
+        const fnArgs = args.map((arg) => evalForm(context, arg));
+        return value.apply(context, fnArgs);
+      }
+      case 'MACRO': {
+        const macroArgs = value.args;
+        const macroBody = value.body;
+        const evalContext = new Context(context);
+        evalContext.defineAll(macroArgs.map((sym) => sym.name), args);
+        return evalForm(evalContext, macroBody);
+      }
       default:
-        throw { msg: 'Invalid callable value', value, form };
+        throw new Ex('Invalid callable value', { value, form });
     }
-  } else if (form.type == 'SYMBOL') {
+  } else if (form.type === 'SYMBOL') {
     return context.resolve(form.name);
   } else {
     return form;
