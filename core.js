@@ -111,7 +111,7 @@ const parseForm = (tokens) => {
   return form;
 };
 
-const compile = (s) => {
+const parse = (s) => {
   const tokens = tokenize(s);
   const iterator = tokens[Symbol.iterator]();
   return parseForm(iterator);
@@ -137,14 +137,15 @@ class Context {
       return this.bindings.get(key);
     }
     if (this.parents != null) {
+      // eslint-disable-next-line no-restricted-syntax
       for (const parent of this.parents) {
         const value = parent.resolve(key);
-        if (value != null) {
+        if (value !== undefined) {
           return value;
         }
       }
     }
-    throw { msg: 'Undefined binding', key, context: this };
+    throw new Ex('Undefined binding', { key, context: this });
   }
 }
 
@@ -294,7 +295,7 @@ const evalForm = (context, form) => {
   }
 };
 
-const evalString = (context, s) => evalForm(context, compile(s));
+const evalString = (context, s) => evalForm(context, parse(s));
 
 const buildContext = (root, bindings) => {
   const context = root || new Context();
@@ -321,4 +322,4 @@ const buildStandardContext = (bindings) => {
   return buildContext(buildContext(null, standardBindings), bindings);
 };
 
-module.exports = { compile, buildStandardContext, eval: evalString };
+module.exports = { compile: parse, buildStandardContext, eval: evalString };
