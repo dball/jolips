@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 const symbolRe = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
 const tokenTypes = [
@@ -10,6 +11,13 @@ const tokenTypes = [
   ['KEYWORD', `:${symbolRe}`],
   ['SYMBOL', symbolRe],
 ].map(([name, re]) => ({ name, re: new RegExp(`^${re}`) }));
+
+class Ex extends Error {
+  constructor(message, data = {}) {
+    super(message);
+    this.data = data;
+  }
+}
 
 const tokenize = (s) => {
   const results = [];
@@ -27,43 +35,43 @@ const tokenize = (s) => {
   while (offset < s.length) {
     const matched = tokenTypes.some(consume);
     if (!matched) {
-      throw { msg: 'Invalid syntax', offset, s };
+      throw new Ex('Invalid syntax', { offset, s });
     }
   }
   return results;
 };
 
 const consIter = (head, tail) => {
-  let seen_head = false;
+  let seenHead = false;
   return {
     next: () => {
-      if (!seen_head) {
-        seen_head = true;
+      if (!seenHead) {
+        seenHead = true;
         return { done: false, value: head };
-      } else {
-        return tail.next();
       }
-    }
+      return tail.next();
+    },
   };
-}
+};
 
-const compileListForm = (tokens) => {
+const parseListForm = (tokens) => {
   const list = [];
   while (true) {
     const next = tokens.next();
     if (next.done) {
-      throw { msg: 'Invalid list form: did not terminate' };
+      throw new Ex('Invalid list form: did not terminate');
     }
-    const [name, value] = next.value;
+    const [name] = next.value;
     switch (name) {
-    case 'RPAREN': return list;
-    default:
-      list.push(compileForm(consIter(next.value, tokens)));
+      case 'RPAREN': return list;
+      default:
+        // eslint-disable-next-line no-use-before-define
+        list.push(parseForm(consIter(next.value, tokens)));
     }
   }
 };
 
-const compileForm = (tokens) => {
+const parseForm = (tokens) => {
   while (true) {
     const next = tokens.next();
     if (next.done) {
@@ -77,7 +85,7 @@ const compileForm = (tokens) => {
       case 'KEYWORD': return { type: name, name: value };
       case 'SYMBOL': return { type: name, name: value };
       case 'WHITESPACE': continue;
-      case 'LPAREN': return compileListForm(tokens);
+      case 'LPAREN': return parseListForm(tokens);
     }
     throw { msg: 'Unexpected token', name, value };
   }
@@ -86,7 +94,7 @@ const compileForm = (tokens) => {
 const compile = (s) => {
   const tokens = tokenize(s);
   const iterator = tokens[Symbol.iterator]();
-  return compileForm(iterator);
+  return parseForm(iterator);
 };
 
 class Context {
@@ -94,12 +102,12 @@ class Context {
     this.parents = parents;
     this.bindings = new Map();
   }
-  
+
   define(key, value) {
     this.bindings.set(key, value);
     return null;
   }
-  
+
   defineAll(keys, values) {
     keys.reduce((accum, key, i) => this.define(key, values[i]), null);
   }
@@ -120,10 +128,11 @@ class Context {
   }
 }
 
-const buildFn = (f) => ({type: 'FN', apply: f});
+const buildFn = (f) => ({ type: 'FN', apply: f });
 
 const buildMacro = (args, body) => ({
-  type: 'MACRO', args, body});
+  type: 'MACRO', args, body
+});
 
 const truthy = (value) => {
   switch (value) {
@@ -135,7 +144,7 @@ const truthy = (value) => {
 
 const partition = (seq, size) => {
   if (seq.length % size != 0) {
-    throw {msg: 'invalid partition', seq, size};
+    throw { msg: 'invalid partition', seq, size };
   }
   return seq.reduce((accum, x, i) => {
     if (i % size == 0) {
@@ -149,13 +158,13 @@ const partition = (seq, size) => {
 
 const compare = (op, seq) => {
   if (seq.length == 0) {
-    throw {msg: 'empty compare seq', op, seq};
+    throw { msg: 'empty compare seq', op, seq };
   }
   {
     const last_type = seq[0];
-    for (const i=1; i<seq.last; i++) {
+    for (const i = 1; i < seq.last; i++) {
       if (last_type !== typeof value) {
-        throw {msg: 'invalid compare seq', op, seq};
+        throw { msg: 'invalid compare seq', op, seq };
       }
     }
   }
@@ -181,11 +190,11 @@ const compare = (op, seq) => {
       break;
     }
     default: {
-      throw {msg: 'Invalid compare op', op, seq};
+      throw { msg: 'Invalid compare op', op, seq };
     }
   }
   let marker = seq[0];
-  for (let i=1; i<seq.length; i++) {
+  for (let i = 1; i < seq.length; i++) {
     const value = seq[i];
     if (comp_pred(marker, value)) {
       marker = value;
