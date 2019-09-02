@@ -2,8 +2,8 @@
 
 const core = require('./core');
 
-test('compile', () => {
-  expect(core.compile('(+ 1 2)')).toStrictEqual([{type: "SYMBOL", name: "+"}, 1, 2]);
+test('parse', () => {
+  expect(core.parse('(+ 1 2)')).toStrictEqual([{type: "SYMBOL", name: "+"}, 1, 2]);
 });
 
 test('eval', () => {

@@ -329,4 +329,4 @@ const buildStandardContext = (bindings) => {
   return buildContext(buildContext(null, standardBindings), bindings);
 };
 
-module.exports = { compile: parse, buildStandardContext, eval: evalString };
+module.exports = { parse, buildStandardContext, eval: evalString };
