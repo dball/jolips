@@ -1,7 +1,12 @@
 /* eslint-disable max-classes-per-file */
 const symbolRe = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
-const tokenTypes = [
+interface TokenType {
+  name: string;
+  re: RegExp;
+}
+
+const tokenTypes: Array<TokenType> = [
   ['LPAREN', '\\('],
   ['RPAREN', '\\)'],
   ['WHITESPACE', '\\s+'],
@@ -21,13 +26,13 @@ class Ex extends Error {
   }
 }
 
-const tokenize = (s: string) => {
-  const results = [];
+const tokenize = (s: string): Array<[string, string]> => {
+  const results: Array<[string, string]> = [];
   let offset = 0;
-  const consume = (tokenType) => {
+  const consume = (tokenType: TokenType) => {
     const { name, re } = tokenType;
-    const [match] = re.exec(s.substr(offset)) || [];
-    if (match != null) {
+    const [match] = re.exec(s.substr(offset)) || [null];
+    if (match !== null) {
       results.push([name, match]);
       offset += match.length;
       return true;
