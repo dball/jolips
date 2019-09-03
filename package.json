@@ -6,7 +6,8 @@
         "eslint": "^6.3.0",
         "eslint-config-airbnb-base": "^14.0.0",
         "eslint-plugin-import": "^2.18.2",
-        "jest": "^24.8.0"
+        "jest": "^24.8.0",
+        "@types/node": "^12.7.3"
     },
     "scripts": {
         "test": "jest"

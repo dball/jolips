@@ -13,13 +13,15 @@ const tokenTypes = [
 ].map(([name, re]) => ({ name, re: new RegExp(`^${re}`) }));
 
 class Ex extends Error {
-  constructor(message, data = {}) {
+  data: object;
+
+  constructor(message: string, data = {}) {
     super(message);
     this.data = data;
   }
 }
 
-const tokenize = (s) => {
+const tokenize = (s: string) => {
   const results = [];
   let offset = 0;
   const consume = (tokenType) => {
@@ -41,7 +43,7 @@ const tokenize = (s) => {
   return results;
 };
 
-const consIter = (head, tail) => {
+const consIter = (head: any, tail) => {
   let seenHead = false;
   return {
     next: () => {
@@ -118,6 +120,9 @@ const parse = (s) => {
 };
 
 class Context {
+  parents: any;
+  bindings: any;
+
   constructor(...parents) {
     this.parents = parents;
     this.bindings = new Map();
@@ -185,7 +190,7 @@ const compare = (op, seq) => {
     const firstType = seq[0];
     for (let i = 1; i < seq.last; i += 1) {
       // eslint-disable-next-line valid-typeof
-      if (firstType !== typeof value) {
+      if (firstType !== typeof seq[i]) {
         throw new Ex('invalid compare seq', { op, seq });
       }
     }
