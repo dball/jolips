@@ -1,12 +1,23 @@
 /* eslint-disable max-classes-per-file */
 const symbolRe = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
-interface TokenType {
+const enum TokenType {
+  LPAREN,
+  RPAREN,
+  WHITESPACE,
+  INTEGER,
+  BOOLEAN,
+  NIL,
+  KEYWORD,
+  SYMBOL,
+}
+
+interface TokenPattern {
   name: string;
   re: RegExp;
 }
 
-const tokenTypes: Array<TokenType> = [
+const tokenPatterns: Array<TokenPattern> = [
   ['LPAREN', '\\('],
   ['RPAREN', '\\)'],
   ['WHITESPACE', '\\s+'],
@@ -29,8 +40,8 @@ class Ex extends Error {
 const tokenize = (s: string): Array<[string, string]> => {
   const results: Array<[string, string]> = [];
   let offset = 0;
-  const consume = (tokenType: TokenType) => {
-    const { name, re } = tokenType;
+  const consume = (tokenPattern: TokenPattern) => {
+    const { name, re } = tokenPattern;
     const [match] = re.exec(s.substr(offset)) || [null];
     if (match !== null) {
       results.push([name, match]);
@@ -40,7 +51,7 @@ const tokenize = (s: string): Array<[string, string]> => {
     return false;
   };
   while (offset < s.length) {
-    const matched = tokenTypes.some(consume);
+    const matched = tokenPatterns.some(consume);
     if (!matched) {
       throw new Ex('Invalid syntax', { offset, s });
     }
