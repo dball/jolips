@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 const symbolRe = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
-const enum TokenType {
+enum TokenType {
   LPAREN,
   RPAREN,
   WHITESPACE,
