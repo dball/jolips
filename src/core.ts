@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 const symbolRe = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
-enum TokenType {
+enum Token {
   LPAREN,
   RPAREN,
   WHITESPACE,
@@ -13,20 +13,20 @@ enum TokenType {
 }
 
 interface TokenPattern {
-  name: string;
+  type: Token;
   re: RegExp;
 }
 
 const tokenPatterns: Array<TokenPattern> = [
-  ['LPAREN', '\\('],
-  ['RPAREN', '\\)'],
-  ['WHITESPACE', '\\s+'],
-  ['INTEGER', '-?\\d+'],
-  ['BOOLEAN', 'true|false'],
-  ['NIL', 'nil'],
-  ['KEYWORD', `:${symbolRe}`],
-  ['SYMBOL', symbolRe],
-].map(([name, re]) => ({ name, re: new RegExp(`^${re}`) }));
+  [Token.LPAREN, '\\('],
+  [Token.RPAREN, '\\)'],
+  [Token.WHITESPACE, '\\s+'],
+  [Token.INTEGER, '-?\\d+'],
+  [Token.BOOLEAN, 'true|false'],
+  [Token.NIL, 'nil'],
+  [Token.KEYWORD, `:${symbolRe}`],
+  [Token.SYMBOL, symbolRe],
+].map(([type, re]) => ({ type, re: new RegExp(`^${re}`) }));
 
 class Ex extends Error {
   data: object;
@@ -37,14 +37,14 @@ class Ex extends Error {
   }
 }
 
-const tokenize = (s: string): Array<[string, string]> => {
-  const results: Array<[string, string]> = [];
+const tokenize = (s: string): Array<[Token, string]> => {
+  const results: Array<[Token, string]> = [];
   let offset = 0;
   const consume = (tokenPattern: TokenPattern) => {
-    const { name, re } = tokenPattern;
+    const { type, re } = tokenPattern;
     const [match] = re.exec(s.substr(offset)) || [null];
     if (match !== null) {
-      results.push([name, match]);
+      results.push([type, match]);
       offset += match.length;
       return true;
     }
