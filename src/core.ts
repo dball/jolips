@@ -91,7 +91,7 @@ class ConsIterator<T> implements IterableIterator<T> {
 
 type Keyword = { type: TokenType.KEYWORD, name: string };
 type JoSymbol = { type: TokenType.SYMBOL, name: string };
-type Syntax = number | boolean | Keyword | JoSymbol | SyntaxList;
+type Syntax = number | boolean | null | Keyword | JoSymbol | SyntaxList;
 interface SyntaxList extends Array<Syntax> {}
 
 const parseListForm = (tokens: IterableIterator<Token>) => {
@@ -117,7 +117,7 @@ const parseListForm = (tokens: IterableIterator<Token>) => {
 };
 
 const parseForm = (tokens: IterableIterator<Token>) => {
-  let form: Syntax;
+  let form: Syntax | undefined = undefined;
   do {
     // TODO why is this type declaration necessary/possible?
     const next: IteratorResult<Token, Token> = tokens.next();
@@ -160,13 +160,17 @@ const parse = (s: string) => {
   return parseForm(iterator);
 };
 
-type Value = any;
+type Value = number | boolean | null | Keyword | JoSymbol;
+// interface ValueList extends Array<Value> {}
+// class Fn {
+//   constructor(private args: ValueList) {};
+// }
 
 class Context {
   parents: Array<Context>;
   bindings: Map<string, Value>;
 
-  constructor(...parents) {
+  constructor(...parents: Array<Context>) {
     this.parents = parents;
     this.bindings = new Map();
   }
@@ -180,10 +184,10 @@ class Context {
     return keys.reduce((context, key, i) => context.define(key, values[i]), this);
   }
 
-  // TODO: pass along fn for undefined value to thunkify undefined
-  resolve(key: string) {
-    if (this.bindings.has(key)) {
-      return this.bindings.get(key);
+  resolve(key: string): Value | undefined {
+    const value = this.bindings.get(key);
+    if (value !== undefined) {
+      return value;
     }
     if (this.parents !== null) {
       // eslint-disable-next-line no-restricted-syntax
@@ -194,17 +198,11 @@ class Context {
         }
       }
     }
-    throw new Ex('Undefined binding', { key, context: this });
+    return undefined;
   }
 }
 
-const buildFn = (f) => ({ type: 'FN', apply: f });
-
-const buildMacro = (args, body) => ({
-  type: 'MACRO', args, body,
-});
-
-const truthy = (value) => {
+const truthy = (value : Value) => {
   switch (value) {
     case false: return false;
     case null: return false;
