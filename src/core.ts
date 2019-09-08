@@ -42,7 +42,7 @@ const tokenPatterns: Array<TokenPattern> =
 interface Token {
   type: TokenType,
   source: string,
-  offset: number,  
+  offset: number,
 }
 
 const tokenize = (s: string): Array<Token> => {
@@ -67,7 +67,7 @@ const tokenize = (s: string): Array<Token> => {
   return results;
 };
 
-const consIter = (head: any, tail) => {
+const consIter = <T extends {}>(head: T, tail: IterableIterator<T>): IterableIterator<T> => {
   let seenHead = false;
   return {
     next: () => {
@@ -80,64 +80,68 @@ const consIter = (head: any, tail) => {
   };
 };
 
-const parseListForm = (tokens) => {
-  const list = [];
+type Keyword = { type: TokenType.KEYWORD, name: string };
+type JoSymbol = { type: TokenType.SYMBOL, name: string };
+type Value = number | boolean | Keyword | JoSymbol;
+
+const parseListForm = (tokens: IterableIterator<Token>) => {
+  const list: Array<Value> = [];
   let terminated = false;
   do {
     const next = tokens.next();
     if (next.done) {
       throw new Ex('Invalid list form: did not terminate');
     }
-    const [name] = next.value;
-    switch (name) {
-      case 'RPAREN':
+    const token: Token = next.value;
+    switch (token.type) {
+      case TokenType.RPAREN:
         terminated = true;
         break;
       default:
         // eslint-disable-next-line no-use-before-define
-        list.push(parseForm(consIter(next.value, tokens)));
+        list.push(parseForm(consIter<Token>(token, tokens)));
     }
   } while (!terminated);
   return list;
 };
 
-const parseForm = (tokens) => {
-  let form;
+const parseForm = (tokens: IterableIterator<Token>) => {
+  let form: Value;
   do {
     const next = tokens.next();
     if (next.done) {
       throw new Ex('No tokens to compile for form');
     }
-    const [name, value] = next.value;
-    switch (name) {
-      case 'INTEGER':
-        form = Number(value);
+    const { type, source }: Token = next.value;
+    switch (type) {
+      case TokenType.INTEGER:
+        form = Number(source);
         break;
-      case 'BOOLEAN':
-        form = value === 'true';
+      case TokenType.BOOLEAN:
+        form = source === 'true';
         break;
-      case 'NIL':
+      case TokenType.NIL:
         form = null;
         break;
-      case 'KEYWORD':
-        form = { type: name, name: value };
+      case TokenType.KEYWORD:
+        form = { type, name: source };
         break;
-      case 'SYMBOL':
-        form = { type: name, name: value };
+      case TokenType.SYMBOL:
+        form = { type, name: source };
         break;
-      case 'WHITESPACE':
+      case TokenType.WHITESPACE:
         break;
-      case 'LPAREN':
+      case TokenType.LPAREN:
         form = parseListForm(tokens);
         break;
       default:
-        throw new Ex('Invalid token type', { name, value });
+        throw new Ex('Invalid token type', { token });
     }
   } while (form === undefined);
   return form;
 };
 
-const parse = (s) => {
+const parse = (s: string) => {
   const tokens = tokenize(s);
   const iterator = tokens[Symbol.iterator]();
   return parseForm(iterator);
