@@ -91,13 +91,11 @@ class ConsIterator<T> implements IterableIterator<T> {
 
 type Keyword = { type: TokenType.KEYWORD, name: string };
 type JoSymbol = { type: TokenType.SYMBOL, name: string };
-// TODO Value is perhaps not the correct name for this type, since it doesn't contain
-// fns or other runtime values, rather ast nodes. Is that the right name?
-type Value = number | boolean | Keyword | JoSymbol | ValueArray;
-interface ValueArray extends Array<Value> {}
+type Syntax = number | boolean | Keyword | JoSymbol | SyntaxList;
+interface SyntaxList extends Array<Syntax> {}
 
 const parseListForm = (tokens: IterableIterator<Token>) => {
-  const list: Array<Value> = [];
+  const list: Array<Syntax> = [];
   let terminated = false;
   do {
     // TODO why is this type declaration necessary/possible?
@@ -119,7 +117,7 @@ const parseListForm = (tokens: IterableIterator<Token>) => {
 };
 
 const parseForm = (tokens: IterableIterator<Token>) => {
-  let form: Value;
+  let form: Syntax;
   do {
     // TODO why is this type declaration necessary/possible?
     const next: IteratorResult<Token, Token> = tokens.next();
