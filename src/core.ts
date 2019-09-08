@@ -1,3 +1,5 @@
+import { typeAlias } from "@babel/types";
+
 /* eslint-disable max-classes-per-file */
 class Ex extends Error {
   data: object;
@@ -67,22 +69,32 @@ const tokenize = (s: string): Array<Token> => {
   return results;
 };
 
-const consIter = <T extends {}>(head: T, tail: IterableIterator<T>): IterableIterator<T> => {
-  let seenHead = false;
-  return {
-    next: () => {
-      if (!seenHead) {
-        seenHead = true;
-        return { done: false, value: head };
-      }
-      return tail.next();
-    },
-  };
-};
+// TODO is there a way to do this without a class? Does it matter?
+class ConsIterator<T> implements IterableIterator<T> {
+  private seenHead = false;
+
+  constructor(private head: T, private tail: IterableIterator<T>) {}
+
+  public next(): IteratorResult<T> {
+    if (!this.seenHead) {
+      this.seenHead = true;
+      // TODO null out head so we don't keep it from gc?
+      return { done: false, value: this.head };
+    }
+    return this.tail.next();
+  }
+
+  [Symbol.iterator](): IterableIterator<T> {
+    return this;
+  }
+}
 
 type Keyword = { type: TokenType.KEYWORD, name: string };
 type JoSymbol = { type: TokenType.SYMBOL, name: string };
-type Value = number | boolean | Keyword | JoSymbol;
+// TODO Value is perhaps not the correct name for this type, since it doesn't contain
+// fns or other runtime values, rather ast nodes. Is that the right name?
+type Value = number | boolean | Keyword | JoSymbol | ValueArray;
+interface ValueArray extends Array<Value> {}
 
 const parseListForm = (tokens: IterableIterator<Token>) => {
   const list: Array<Value> = [];
@@ -92,14 +104,14 @@ const parseListForm = (tokens: IterableIterator<Token>) => {
     if (next.done) {
       throw new Ex('Invalid list form: did not terminate');
     }
-    const token: Token = next.value;
+    const token = next.value;
     switch (token.type) {
       case TokenType.RPAREN:
         terminated = true;
         break;
       default:
         // eslint-disable-next-line no-use-before-define
-        list.push(parseForm(consIter<Token>(token, tokens)));
+        list.push(parseForm(new ConsIterator(token, tokens)));
     }
   } while (!terminated);
   return list;
@@ -112,7 +124,9 @@ const parseForm = (tokens: IterableIterator<Token>) => {
     if (next.done) {
       throw new Ex('No tokens to compile for form');
     }
-    const { type, source }: Token = next.value;
+    // TODO why does this need a type declaration in order to give context in vscode?
+    const token = next.value;
+    const { type, source } = token;
     switch (type) {
       case TokenType.INTEGER:
         form = Number(source);
