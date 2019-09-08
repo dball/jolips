@@ -1,7 +1,16 @@
 /* eslint-disable max-classes-per-file */
+class Ex extends Error {
+  data: object;
+
+  constructor(message: string, data = {}) {
+    super(message);
+    this.data = data;
+  }
+}
+
 const symbolRe = "[a-zA-Z\-_?!*+<>=/][a-zA-Z\-_?!*+<>=/0-9']*";
 
-enum Token {
+enum TokenType {
   LPAREN,
   RPAREN,
   WHITESPACE,
@@ -13,39 +22,38 @@ enum Token {
 }
 
 interface TokenPattern {
-  type: Token;
-  re: RegExp;
+  type: TokenType,
+  re: RegExp,
 }
 
-const tokenPatterns: Array<TokenPattern> = [
-  [Token.LPAREN, '\\('],
-  [Token.RPAREN, '\\)'],
-  [Token.WHITESPACE, '\\s+'],
-  [Token.INTEGER, '-?\\d+'],
-  [Token.BOOLEAN, 'true|false'],
-  [Token.NIL, 'nil'],
-  [Token.KEYWORD, `:${symbolRe}`],
-  [Token.SYMBOL, symbolRe],
-].map(([type, re]) => ({ type, re: new RegExp(`^${re}`) }));
+const tokenStrings: Array<[TokenType, string]> =
+  [[TokenType.LPAREN, '\\('],
+  [TokenType.RPAREN, '\\)'],
+  [TokenType.WHITESPACE, '\\s+'],
+  [TokenType.INTEGER, '-?\\d+'],
+  [TokenType.BOOLEAN, 'true|false'],
+  [TokenType.NIL, 'nil'],
+  [TokenType.KEYWORD, `:${symbolRe}`],
+  [TokenType.SYMBOL, symbolRe],];
 
-class Ex extends Error {
-  data: object;
+const tokenPatterns: Array<TokenPattern> =
+  tokenStrings.map(([type, re]) => ({ type, re: new RegExp(`^${re}`) }));
 
-  constructor(message: string, data = {}) {
-    super(message);
-    this.data = data;
-  }
+interface Token {
+  type: TokenType,
+  source: string,
+  offset: number,  
 }
 
-const tokenize = (s: string): Array<[Token, string]> => {
-  const results: Array<[Token, string]> = [];
+const tokenize = (s: string): Array<Token> => {
+  const results: Array<Token> = [];
   let offset = 0;
   const consume = (tokenPattern: TokenPattern) => {
     const { type, re } = tokenPattern;
-    const [match] = re.exec(s.substr(offset)) || [null];
-    if (match !== null) {
-      results.push([type, match]);
-      offset += match.length;
+    const [source] = re.exec(s.substr(offset)) || [null];
+    if (source !== null) {
+      results.push({ type, source, offset });
+      offset += source.length;
       return true;
     }
     return false;
