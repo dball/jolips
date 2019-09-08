@@ -210,11 +210,11 @@ const truthy = (value : Value) => {
   }
 };
 
-const partition = (seq, size) => {
+const partition = <T extends {}>(seq: Array<T>, size: number): Array<Array<T>> => {
   if (seq.length % size !== 0) {
     throw new Ex('invalid partition', { seq, size });
   }
-  return seq.reduce((accum, x, i) => {
+  return seq.reduce((accum: Array<Array<T>>, x, i) => {
     if (i % size === 0) {
       accum.push([x]);
     } else {
