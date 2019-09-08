@@ -1,4 +1,4 @@
-import { typeAlias } from "@babel/types";
+import { typeAlias, isModuleSpecifier } from "@babel/types";
 
 /* eslint-disable max-classes-per-file */
 class Ex extends Error {
@@ -71,7 +71,7 @@ const tokenize = (s: string): Array<Token> => {
 
 // TODO is there a way to do this without a class? Does it matter?
 class ConsIterator<T> implements IterableIterator<T> {
-  private seenHead = false;
+  seenHead: boolean = false;
 
   constructor(private head: T, private tail: IterableIterator<T>) {}
 
@@ -224,13 +224,24 @@ const partition = <T extends {}>(seq: Array<T>, size: number): Array<Array<T>> =
   }, []);
 };
 
-const compare = (op, seq) => {
+module.exports = { parse };
+
+/*
+enum Comparator {
+  GTE = '>=',
+  GT = '>',
+  EQ = '=',
+  LT = '<',
+  LTE = '<='
+}
+
+const compare = (op: Comparator, seq: Array<number>) => {
   if (seq.length === 0) {
     throw new Ex('empty compare seq', { op, seq });
   }
   {
     const firstType = seq[0];
-    for (let i = 1; i < seq.last; i += 1) {
+    for (let i = 1; i < seq.length; i += 1) {
       // eslint-disable-next-line valid-typeof
       if (firstType !== typeof seq[i]) {
         throw new Ex('invalid compare seq', { op, seq });
@@ -274,7 +285,9 @@ const compare = (op, seq) => {
   }
   return true;
 };
+*/
 
+/*
 // TODO implement as loop as optimization
 const evalForm = (context, form) => {
   if (Array.isArray(form)) {
@@ -377,3 +390,4 @@ const buildStandardContext = (bindings) => {
 };
 
 module.exports = { parse, buildStandardContext, eval: evalString };
+*/
