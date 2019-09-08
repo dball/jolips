@@ -160,29 +160,32 @@ const parse = (s: string) => {
   return parseForm(iterator);
 };
 
+type Value = any;
+
 class Context {
-  parents: any;
-  bindings: any;
+  parents: Array<Context>;
+  bindings: Map<string, Value>;
 
   constructor(...parents) {
     this.parents = parents;
     this.bindings = new Map();
   }
 
-  define(key, value) {
+  define(key: string, value: Value): Context {
     this.bindings.set(key, value);
-    return null;
+    return this;
   }
 
-  defineAll(keys, values) {
-    keys.reduce((accum, key, i) => this.define(key, values[i]), null);
+  defineAll(keys: Array<string>, values: Array<Value>) {
+    return keys.reduce((context, key, i) => context.define(key, values[i]), this);
   }
 
-  resolve(key) {
+  // TODO: pass along fn for undefined value to thunkify undefined
+  resolve(key: string) {
     if (this.bindings.has(key)) {
       return this.bindings.get(key);
     }
-    if (this.parents != null) {
+    if (this.parents !== null) {
       // eslint-disable-next-line no-restricted-syntax
       for (const parent of this.parents) {
         const value = parent.resolve(key);
