@@ -75,7 +75,7 @@ class ConsIterator<T> implements IterableIterator<T> {
 
   constructor(private head: T, private tail: IterableIterator<T>) {}
 
-  public next(): IteratorResult<T> {
+  public next(): IteratorResult<T, T> {
     if (!this.seenHead) {
       this.seenHead = true;
       // TODO null out head so we don't keep it from gc?
@@ -100,7 +100,8 @@ const parseListForm = (tokens: IterableIterator<Token>) => {
   const list: Array<Value> = [];
   let terminated = false;
   do {
-    const next = tokens.next();
+    // TODO why is this type declaration necessary/possible?
+    const next: IteratorResult<Token, Token> = tokens.next();
     if (next.done) {
       throw new Ex('Invalid list form: did not terminate');
     }
@@ -120,11 +121,11 @@ const parseListForm = (tokens: IterableIterator<Token>) => {
 const parseForm = (tokens: IterableIterator<Token>) => {
   let form: Value;
   do {
-    const next = tokens.next();
+    // TODO why is this type declaration necessary/possible?
+    const next: IteratorResult<Token, Token> = tokens.next();
     if (next.done) {
       throw new Ex('No tokens to compile for form');
     }
-    // TODO why does this need a type declaration in order to give context in vscode?
     const token = next.value;
     const { type, source } = token;
     switch (type) {
