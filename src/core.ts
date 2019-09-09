@@ -1,4 +1,5 @@
 import { typeAlias, isModuleSpecifier } from "@babel/types";
+import { format } from "url";
 
 /* eslint-disable max-classes-per-file */
 class Ex extends Error {
@@ -210,7 +211,7 @@ const truthy = (value : Value) => {
   }
 };
 
-const partition = <T extends {}>(seq: Array<T>, size: number): Array<Array<T>> => {
+const partition = <T>(seq: Array<T>, size: number): Array<Array<T>> => {
   if (seq.length % size !== 0) {
     throw new Ex('invalid partition', { seq, size });
   }
@@ -224,7 +225,66 @@ const partition = <T extends {}>(seq: Array<T>, size: number): Array<Array<T>> =
   }, []);
 };
 
-module.exports = { parse };
+const compileListForm = (list: SyntaxList): string => {
+  const [first, ...rest] = list;
+  if ((first as JoSymbol).type !== TokenType.SYMBOL) {
+    throw new Ex('Invalid list head type', { first });
+  }
+  const symbol: JoSymbol = (first as JoSymbol);
+  switch (symbol.name) {
+    case 'let': {
+      const [bindings, ...body] = rest;
+      let output = `(...parents) => { const bindings = new Context}`;
+      for (const [name, value] of partition<Syntax>((bindings as SyntaxList), 2)) {
+        if ((name as JoSymbol).type !== TokenType.SYMBOL) {
+          throw new Ex('Invalid let binding symbol', { name });
+        }
+        output += `${(name as JoSymbol).name}`
+      }
+      (bindings as SyntaxList).forEach(([name, value]) => {
+
+      });
+      output += ')=>{}';
+      return output;
+    }
+  }
+};
+
+const compileForm = (form: Syntax): string => {
+  switch (typeof form) {
+    case 'number': {
+      return '' + form;
+    }
+    case 'boolean': {
+      return form ? 'true' : 'false';
+    }
+    case 'object': {
+      if (form === null) {
+        return 'null';
+      } else if (Array.isArray(form)) {
+        return compileListForm(form);
+      } else {
+        switch(form.type) {
+          case TokenType.SYMBOL: {
+            return `bindings.get('${form.name}')`;
+          }
+          case TokenType.KEYWORD: {
+            return `keyword('${form.name}')`;
+          }
+          default: {
+            throw new Ex('Invalid object type', { form });
+          }
+        }
+      }
+    }
+  }
+}
+
+const compile = (s: string): string {
+  return compileForm(parse(s));
+}
+
+module.exports = { parse, compile };
 
 /*
 enum Comparator {
