@@ -225,6 +225,17 @@ const partition = <T>(seq: Array<T>, size: number): Array<Array<T>> => {
   }, []);
 };
 
+const compileLetForm = (bindings: Array<[JoSymbol, Syntax]>, ...body: SyntaxList): string => {
+  const compiledBindings = bindings
+    .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
+    .join('; ');
+  const compiledBody = body
+  .map(compileForm)
+  .map((value, i) => i < body.length - 1 ? value : `return ${value}`)
+  .join('; ');
+  return `((bindings) => { ${compiledBindings}; ${compiledBody}; })(new Context(bindings));`;
+}
+
 const compileListForm = (list: SyntaxList): string => {
   const [first, ...rest] = list;
   if ((first as JoSymbol).type !== TokenType.SYMBOL) {
@@ -234,18 +245,7 @@ const compileListForm = (list: SyntaxList): string => {
   switch (symbol.name) {
     case 'let': {
       const [bindings, ...body] = rest;
-      let output = `(...parents) => { const bindings = new Context}`;
-      for (const [name, value] of partition<Syntax>((bindings as SyntaxList), 2)) {
-        if ((name as JoSymbol).type !== TokenType.SYMBOL) {
-          throw new Ex('Invalid let binding symbol', { name });
-        }
-        output += `${(name as JoSymbol).name}`
-      }
-      (bindings as SyntaxList).forEach(([name, value]) => {
-
-      });
-      output += ')=>{}';
-      return output;
+      return compileLetForm(bindings, body);
     }
   }
 };
@@ -266,7 +266,7 @@ const compileForm = (form: Syntax): string => {
       } else {
         switch(form.type) {
           case TokenType.SYMBOL: {
-            return `bindings.get('${form.name}')`;
+            return `bindings.resolve('${form.name}')`;
           }
           case TokenType.KEYWORD: {
             return `keyword('${form.name}')`;
