@@ -245,7 +245,8 @@ const compileListForm = (list: SyntaxList): string => {
   switch (symbol.name) {
     case 'let': {
       const [bindings, ...body] = rest;
-      return compileLetForm(bindings, body);
+      const pbindings = (partition<Syntax>(bindings as SyntaxList, 2) as Array<[JoSymbol, Syntax]>);
+      return compileLetForm(pbindings, body);
     }
   }
 };
