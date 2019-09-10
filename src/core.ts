@@ -230,24 +230,29 @@ const compileLetForm = (bindings: Array<[JoSymbol, Syntax]>, ...body: SyntaxList
     .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
     .join('; ');
   const compiledBody = body
-  .map(compileForm)
-  .map((value, i) => i < body.length - 1 ? value : `return ${value}`)
-  .join('; ');
+    .map(compileForm)
+    .map((value, i) => i < body.length - 1 ? value : `return ${value}`)
+    .join('; ');
   return `((bindings) => { ${compiledBindings}; ${compiledBody}; })(new Context(bindings));`;
 }
 
 const compileListForm = (list: SyntaxList): string => {
-  const [first, ...rest] = list;
-  if ((first as JoSymbol).type !== TokenType.SYMBOL) {
-    throw new Ex('Invalid list head type', { first });
-  }
+  const [first, ...args] = list;
   const symbol: JoSymbol = (first as JoSymbol);
+  console.log({ symbol });
   switch (symbol.name) {
     case 'let': {
-      const [bindings, ...body] = rest;
-      const pbindings = (partition<Syntax>(bindings as SyntaxList, 2) as Array<[JoSymbol, Syntax]>);
+      const [bindings, ...body] = args;
+      const pbindings = partition<Syntax>(bindings as SyntaxList, 2) as Array<[JoSymbol, Syntax]>;
       return compileLetForm(pbindings, body);
     }
+    case 'def': {
+      const [first, form] = args;
+      const symbol = (first as JoSymbol);
+      return `bindings.def('${symbol.name}', ${compileForm(form)});`;
+    }
+    default:
+      throw new Ex('Unsupported fn value', { symbol });
   }
 };
 
@@ -270,7 +275,7 @@ const compileForm = (form: Syntax): string => {
             return `bindings.resolve('${form.name}')`;
           }
           case TokenType.KEYWORD: {
-            return `keyword('${form.name}')`;
+            return `bindings.keyword('${form.name}')`;
           }
           default: {
             throw new Ex('Invalid object type', { form });
@@ -279,11 +284,11 @@ const compileForm = (form: Syntax): string => {
       }
     }
   }
-}
+};
 
-const compile = (s: string): string {
+const compile = (s: string): string => {
   return compileForm(parse(s));
-}
+};
 
 module.exports = { parse, compile };
 
