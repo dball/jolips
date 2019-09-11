@@ -239,16 +239,19 @@ const isBinding = (forms: SyntaxList): forms is Binding => {
   return !!first && first['type'] == TokenType.SYMBOL;
 };
 
-const compileLetForm = (bindings: Array<SyntaxList>, ...body: SyntaxList): string => {
+const compileLetForm = (bindings: Array<SyntaxList>, body: SyntaxList): string => {
+  console.log("let bindings", { bindings });
   const compiledBindings = bindings
     .map((binding: SyntaxList) => {
       if (!isBinding(binding)) {
         throw new Ex('Invalid binding', { binding });
       }
+      console.log("binding", binding);
       return binding;
     })
     .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
     .join('; ');
+  console.log("let body", { body });
   const compiledBody = body
     .map(compileForm)
     .map((value, i) => i < body.length - 1 ? value : `return ${value}`)
@@ -275,6 +278,7 @@ const compileListForm = (list: SyntaxList): string => {
       return `bindings.def('${symbol.name}', ${compileForm(form)});`;
     }
     default:
+      console.log("what", { symbol });
       throw new Ex('Unsupported fn value', { symbol });
   }
 };

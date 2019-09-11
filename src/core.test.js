@@ -8,7 +8,7 @@ test('parse', () => {
 test('compile', () => {
   expect(core.compile('2')).toStrictEqual('2');
   expect(core.compile('(def x 2)')).toStrictEqual(`bindings.def('x', 2);`);
-  expect(core.compile('(let (x 2) x)')).toStrictEqual(``);
+  expect(core.compile('(let (x 2) x)')).toStrictEqual(`((bindings) => { bindings.def('x', 2); return bindings.resolve('x'); })(new Context(bindings));`);
 
 });
 
