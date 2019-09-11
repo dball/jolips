@@ -1,5 +1,4 @@
 import { typeAlias, isModuleSpecifier } from "@babel/types";
-import { format } from "url";
 
 /* eslint-disable max-classes-per-file */
 class Ex extends Error {
@@ -93,10 +92,11 @@ class ConsIterator<T> implements IterableIterator<T> {
 type Keyword = { type: TokenType.KEYWORD, name: string };
 type JoSymbol = { type: TokenType.SYMBOL, name: string };
 type Syntax = number | boolean | null | Keyword | JoSymbol | SyntaxList;
+// TODO is there an effective distinction between these two?
 interface SyntaxList extends Array<Syntax> {}
 
 const parseListForm = (tokens: IterableIterator<Token>) => {
-  const list: Array<Syntax> = [];
+  const list: SyntaxList = [];
   let terminated = false;
   do {
     // TODO why is this type declaration necessary/possible?
@@ -227,6 +227,10 @@ const partition = <T>(seq: Array<T>, size: number): Array<Array<T>> => {
 
 type Binding = [JoSymbol, Syntax];
 
+const isSyntaxList = (form: Syntax): form is SyntaxList => {
+  return Array.isArray(form);
+}
+
 const isBinding = (forms: SyntaxList): forms is Binding => {
   if (forms.length !== 2) {
     return false;
@@ -235,8 +239,14 @@ const isBinding = (forms: SyntaxList): forms is Binding => {
   return !!first && first['type'] == TokenType.SYMBOL;
 };
 
-const compileLetForm = (bindings: Array<Binding>, ...body: SyntaxList): string => {
+const compileLetForm = (bindings: Array<SyntaxList>, ...body: SyntaxList): string => {
   const compiledBindings = bindings
+    .map((binding: SyntaxList) => {
+      if (!isBinding(binding)) {
+        throw new Ex('Invalid binding', { binding });
+      }
+      return binding;
+    })
     .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
     .join('; ');
   const compiledBody = body
@@ -253,7 +263,10 @@ const compileListForm = (list: SyntaxList): string => {
   switch (symbol.name) {
     case 'let': {
       const [bindings, ...body] = args;
-      const pbindings = partition<Syntax>(bindings as SyntaxList, 2) as Array<Binding>;
+      if (!isSyntaxList(bindings)) {
+        throw new Ex("Invalid bindings", { bindings });
+      }
+      const pbindings = partition(bindings, 2);
       return compileLetForm(pbindings, body);
     }
     case 'def': {
