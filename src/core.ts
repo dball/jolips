@@ -225,7 +225,17 @@ const partition = <T>(seq: Array<T>, size: number): Array<Array<T>> => {
   }, []);
 };
 
-const compileLetForm = (bindings: Array<[JoSymbol, Syntax]>, ...body: SyntaxList): string => {
+type Binding = [JoSymbol, Syntax];
+
+const isBinding = (forms: SyntaxList): forms is Binding => {
+  if (forms.length !== 2) {
+    return false;
+  }
+  const [first, ] = forms;
+  return !!first && first['type'] == TokenType.SYMBOL;
+};
+
+const compileLetForm = (bindings: Array<Binding>, ...body: SyntaxList): string => {
   const compiledBindings = bindings
     .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
     .join('; ');
@@ -243,7 +253,7 @@ const compileListForm = (list: SyntaxList): string => {
   switch (symbol.name) {
     case 'let': {
       const [bindings, ...body] = args;
-      const pbindings = partition<Syntax>(bindings as SyntaxList, 2) as Array<[JoSymbol, Syntax]>;
+      const pbindings = partition<Syntax>(bindings as SyntaxList, 2) as Array<Binding>;
       return compileLetForm(pbindings, body);
     }
     case 'def': {
