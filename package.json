@@ -16,16 +16,11 @@
         "typescript": "^3.6.2"
     },
     "jest": {
-        "moduleFileExtensions": [
-            "ts",
-            "js"
-        ],
-        "transform": {
-            "\\.(ts)$": "ts-jest"
-        }
+        "roots": ["build"],
+        "testEnvironment": "node"
     },
     "scripts": {
         "build": "npx tsc -p tsconfig.json",
-        "test": "jest"
+        "test": "npm run build && npx jest"
     }
 }
