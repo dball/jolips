@@ -25,6 +25,7 @@
         }
     },
     "scripts": {
+        "build": "npx tsc -p tsconfig.json",
         "test": "jest"
     }
 }
