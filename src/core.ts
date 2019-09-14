@@ -234,18 +234,15 @@ const isBinding = (forms: SyntaxList): forms is Binding => {
 };
 
 const compileLetForm = (bindings: Array<SyntaxList>, body: SyntaxList): string => {
-  console.log("let bindings", { bindings });
   const compiledBindings = bindings
     .map((binding: SyntaxList) => {
       if (!isBinding(binding)) {
         throw new Ex('Invalid binding', { binding });
       }
-      console.log("binding", binding);
       return binding;
     })
     .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
     .join('; ');
-  console.log("let body", { body });
   const compiledBody = body
     .map(compileForm)
     .map((value, i) => i < body.length - 1 ? value : `return ${value}`)
@@ -256,7 +253,6 @@ const compileLetForm = (bindings: Array<SyntaxList>, body: SyntaxList): string =
 const compileListForm = (list: SyntaxList): string => {
   const [first, ...args] = list;
   const symbol: JoSymbol = (first as JoSymbol);
-  console.log({ symbol });
   switch (symbol.name) {
     case 'let': {
       const [bindings, ...body] = args;
@@ -272,7 +268,6 @@ const compileListForm = (list: SyntaxList): string => {
       return `bindings.def('${symbol.name}', ${compileForm(form)});`;
     }
     default:
-      console.log("what", { symbol });
       throw new Ex('Unsupported fn value', { symbol });
   }
 };
