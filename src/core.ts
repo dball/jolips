@@ -1,5 +1,3 @@
-import { typeAlias, isModuleSpecifier } from "@babel/types";
-
 /* eslint-disable max-classes-per-file */
 class Ex extends Error {
   data: object;
@@ -162,10 +160,6 @@ const parse = (s: string) => {
 };
 
 type Value = number | boolean | null | Keyword | JoSymbol;
-// interface ValueList extends Array<Value> {}
-// class Fn {
-//   constructor(private args: ValueList) {};
-// }
 
 class Context {
   parents: Array<Context>;
