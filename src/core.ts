@@ -153,7 +153,7 @@ const parseForm = (tokens: IterableIterator<Token>) => {
   return form;
 };
 
-const parse = (s: string) => {
+export const parse = (s: string) => {
   const tokens = tokenize(s);
   const iterator = tokens[Symbol.iterator]();
   return parseForm(iterator);
@@ -302,11 +302,9 @@ const compileForm = (form: Syntax): string => {
   }
 };
 
-const compile = (s: string): string => {
+export const compile = (s: string): string => {
   return compileForm(parse(s));
 };
-
-module.exports = { parse, compile };
 
 /*
 enum Comparator {
