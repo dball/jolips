@@ -8,10 +8,16 @@
       "type": "node",
       "request": "launch",
       "name": "run tests",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+      "args": ["-i",],
       "cwd": "${workspaceFolder}",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "test"],
-      "port": 9229
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "internalConsoleOptions": "openOnSessionStart",
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/build/**/*"
+      ],
+      //"envFile": "${workspaceRoot}/.env"
     }
   ]
 }
