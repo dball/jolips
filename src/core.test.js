@@ -2,14 +2,13 @@
 const core = require('./core');
 
 test('parse', () => {
-  expect(core.parse('(+ 1 2)')).toStrictEqual([{type: 7, name: "+"}, 1, 2]);
+  expect(core.parse('(+ 1 2)')).toStrictEqual([{ type: 7, name: "+" }, 1, 2]);
 });
 
 test('compile', () => {
   expect(core.compile('2')).toStrictEqual('2');
-  expect(core.compile('(def x 2)')).toStrictEqual(`bindings.def('x', 2);`);
-  expect(core.compile('(let (x 2) x)')).toStrictEqual(`((bindings) => { bindings.def('x', 2); return bindings.resolve('x'); })(new Context(bindings));`);
-
+  expect(core.compile('(def x 2)')).toStrictEqual(`vars.define('x', 2);`);
+  expect(core.compile('(let (x 2) x)')).toStrictEqual(`((bindings) => { bindings.define('x', 2); return bindings.resolve('x'); })(bindings.build());`);
 });
 
 /*

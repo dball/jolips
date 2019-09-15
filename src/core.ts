@@ -87,8 +87,8 @@ class ConsIterator<T> implements IterableIterator<T> {
   }
 }
 
-type Keyword = { type: TokenType.KEYWORD, name: string };
-type JoSymbol = { type: TokenType.SYMBOL, name: string };
+export type Keyword = { type: TokenType.KEYWORD, name: string };
+export type JoSymbol = { type: TokenType.SYMBOL, name: string };
 type Syntax = number | boolean | null | Keyword | JoSymbol | SyntaxList;
 // TODO is there an effective distinction between these two?
 interface SyntaxList extends Array<Syntax> {}
@@ -159,52 +159,6 @@ export const parse = (s: string) => {
   return parseForm(iterator);
 };
 
-type Value = number | boolean | null | Keyword | JoSymbol;
-
-class Context {
-  parents: Array<Context>;
-  bindings: Map<string, Value>;
-
-  constructor(...parents: Array<Context>) {
-    this.parents = parents;
-    this.bindings = new Map();
-  }
-
-  define(key: string, value: Value): Context {
-    this.bindings.set(key, value);
-    return this;
-  }
-
-  defineAll(keys: Array<string>, values: Array<Value>) {
-    return keys.reduce((context, key, i) => context.define(key, values[i]), this);
-  }
-
-  resolve(key: string): Value | undefined {
-    const value = this.bindings.get(key);
-    if (value !== undefined) {
-      return value;
-    }
-    if (this.parents !== null) {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const parent of this.parents) {
-        const value = parent.resolve(key);
-        if (value !== undefined) {
-          return value;
-        }
-      }
-    }
-    return undefined;
-  }
-}
-
-const truthy = (value : Value) => {
-  switch (value) {
-    case false: return false;
-    case null: return false;
-    default: return true;
-  }
-};
-
 const partition = <T>(seq: Array<T>, size: number): Array<Array<T>> => {
   if (seq.length % size !== 0) {
     throw new Ex('invalid partition', { seq, size });
@@ -241,13 +195,13 @@ const compileLetForm = (bindings: Array<SyntaxList>, body: SyntaxList): string =
       }
       return binding;
     })
-    .map(([symbol, form]) => `bindings.def('${symbol.name}', ${compileForm(form)})`)
+    .map(([symbol, form]) => `bindings.define('${symbol.name}', ${compileForm(form)})`)
     .join('; ');
   const compiledBody = body
     .map(compileForm)
     .map((value, i) => i < body.length - 1 ? value : `return ${value}`)
     .join('; ');
-  return `((bindings) => { ${compiledBindings}; ${compiledBody}; })(new Context(bindings));`;
+  return `((bindings) => { ${compiledBindings}; ${compiledBody}; })(bindings.build());`;
 }
 
 const compileListForm = (list: SyntaxList): string => {
@@ -265,7 +219,7 @@ const compileListForm = (list: SyntaxList): string => {
     case 'def': {
       const [first, form] = args;
       const symbol = (first as JoSymbol);
-      return `bindings.def('${symbol.name}', ${compileForm(form)});`;
+      return `vars.define('${symbol.name}', ${compileForm(form)});`;
     }
     default:
       throw new Ex('Unsupported fn value', { symbol });
