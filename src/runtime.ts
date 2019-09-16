@@ -1,3 +1,4 @@
+import { createContext as vmCreateContext, runInContext, Context as vmContext } from 'vm';
 import { JoSymbol, Keyword } from './core';
 
 type Value = number | boolean | null | Keyword | JoSymbol;
@@ -54,3 +55,13 @@ const truthy = (value : Value) => {
     default: return true;
   }
 };
+
+export const createContext = () => {
+  const vars = new Context();
+  const sandbox = { vars, bindings: vars };
+  return vmCreateContext(sandbox);
+};
+
+export const evalCode = (code: string, context: vmContext | undefined): any => {
+  return runInContext(code, context || createContext());
+}
