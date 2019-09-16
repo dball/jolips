@@ -1,5 +1,6 @@
 /* eslint-disable quotes */
 const core = require('./core');
+const runtime = require('./runtime');
 
 test('parse', () => {
   expect(core.parse('(+ 1 2)')).toStrictEqual([{ type: 7, name: "+" }, 1, 2]);
@@ -9,6 +10,10 @@ test('compile', () => {
   expect(core.compile('2')).toStrictEqual('2');
   expect(core.compile('(def x 2)')).toStrictEqual(`vars.define('x', 2);`);
   expect(core.compile('(let (x 2) x)')).toStrictEqual(`((bindings) => { bindings.define('x', 2); return bindings.resolve('x'); })(bindings.build());`);
+});
+test('runtime', () => {
+  expect(runtime.evalCode('2')).toStrictEqual(2);
+  expect(runtime.evalCode(core.compile('(let (x 2) x)'))).toStrictEqual(2);
 });
 
 /*

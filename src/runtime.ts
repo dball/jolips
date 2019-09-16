@@ -43,7 +43,7 @@ class Context {
   }
 
   build(): Context {
-    throw "TODO";
+    return new Context(this);
   }
 }
 
